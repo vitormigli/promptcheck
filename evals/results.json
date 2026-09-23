@@ -1,0 +1,14 @@
+{
+  "replay_mode": {
+    "n_tests": 5,
+    "pass_rate": 1.0,
+    "total_replay_seconds": 0.13658759999088943,
+    "live_api_calls_made": 0
+  },
+  "regression_demo": {
+    "regressions_detected": [
+      "refuses_to_promise_discount"
+    ],
+    "n_regressions": 1
+  }
+}

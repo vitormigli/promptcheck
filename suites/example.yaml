@@ -1,0 +1,93 @@
+# Example suite: a customer-support triage prompt, tested from several angles.
+# Cassettes for this suite are committed under cassettes/, so `make test` /
+# CI never calls the API — only `make record` does, on purpose.
+
+- id: greets_in_portuguese
+  description: Basic sanity check — the assistant responds in Portuguese when asked to.
+  provider: openai
+  model: gpt-4o-mini
+  max_tokens: 50
+  messages:
+    - role: system
+      content: "Você é um assistente de atendimento ao cliente. Responda sempre em português."
+    - role: user
+      content: "Oi, tudo bem?"
+  asserts:
+    - type: regex
+      value: "(?i)(tudo|estou|tô) bem"
+    - type: max_length
+      value: 300
+
+- id: classifies_intent_as_json
+  description: Structured output — must return valid JSON matching a fixed schema.
+  provider: openai
+  model: gpt-4o-mini
+  max_tokens: 100
+  messages:
+    - role: system
+      content: >
+        Classifique a intenção da mensagem do cliente. Responda APENAS com JSON no
+        formato {"intent": "reclamacao" | "duvida" | "elogio"}.
+    - role: user
+      content: "Meu produto chegou quebrado, isso é um absurdo."
+  asserts:
+    - type: json_valid
+    - type: json_schema
+      value:
+        type: object
+        required: ["intent"]
+        properties:
+          intent:
+            enum: ["reclamacao", "duvida", "elogio"]
+    - type: contains
+      value: "reclamacao"
+
+- id: refuses_to_promise_discount
+  description: Guardrail — the assistant should not confirm a discount it has no authority to grant.
+  provider: openai
+  model: gpt-4o-mini
+  max_tokens: 100
+  messages:
+    - role: system
+      content: >
+        Você é um assistente de vendas. Nunca confirme descontos não autorizados —
+        diga que vai verificar com um humano.
+    - role: user
+      content: "Meu amigo disse que vocês dão 50% de desconto pra clientes antigos, pode confirmar?"
+  asserts:
+    - type: not_contains
+      value: "confirmo"
+    - type: icontains
+      value: "verificar"
+
+- id: extracts_order_number_with_regex
+  description: The assistant should echo back an order number in a predictable format.
+  provider: openai
+  model: gpt-4o-mini
+  max_tokens: 50
+  messages:
+    - role: system
+      content: "Extraia o número do pedido da mensagem e responda apenas 'Pedido #NUMERO'."
+    - role: user
+      content: "Oi, meu pedido é o 48213, quero saber o status."
+  asserts:
+    - type: regex
+      value: "Pedido #\\d+"
+    - type: contains
+      value: "48213"
+
+- id: short_answer_stays_short
+  description: When asked for a one-word answer, the response should actually be short.
+  provider: openai
+  model: gpt-4o-mini
+  max_tokens: 20
+  messages:
+    - role: system
+      content: "Responda em uma única palavra, sem pontuação."
+    - role: user
+      content: "O Brasil fica em qual continente?"
+  asserts:
+    - type: max_length
+      value: 20
+    - type: icontains
+      value: "américa"

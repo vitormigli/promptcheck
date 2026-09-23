@@ -1,0 +1,5 @@
+services:
+  demo:
+    build: .
+    # Runs the demo suite in replay mode against the committed cassettes —
+    # no API key needed, no network call made.

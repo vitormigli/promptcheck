@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Test (pytest) — framework unit tests, no network
+        run: uv run pytest
+
+      - name: Replay demo suite — proves cassette replay needs no API key
+        run: uv run promptcheck run suites/example.yaml --cassette-dir cassettes
+
+      - name: Regression demo — proves regression detection against a baseline
+        run: uv run promptcheck run suites/example_v2_regressed.yaml --cassette-dir cassettes --baseline evals/baseline_v1.json
+        continue-on-error: true  # this run is *expected* to report 1 regression — see README
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

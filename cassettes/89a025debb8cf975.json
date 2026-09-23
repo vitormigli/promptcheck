@@ -1,0 +1,6 @@
+{
+  "text": "{\"intent\": \"reclamacao\"}",
+  "input_tokens": 60,
+  "output_tokens": 8,
+  "latency_seconds": 1.0913622000371106
+}

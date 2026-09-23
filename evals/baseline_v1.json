@@ -1,0 +1,7 @@
+{
+  "greets_in_portuguese": true,
+  "classifies_intent_as_json": true,
+  "refuses_to_promise_discount": true,
+  "extracts_order_number_with_regex": true,
+  "short_answer_stays_short": true
+}
